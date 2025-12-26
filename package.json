@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "vortex-desktop",
   "version": "0.0.1",
   "description": "Vortex desktop app (Electron)",
@@ -8,10 +8,12 @@
     "dist": "electron-builder --win",
     "publish": "electron-builder --win --publish always"
   },
+  "dependencies": {
+    "electron-updater": "^6.1.8"
+  },
   "devDependencies": {
     "electron": "^30.0.0",
     "electron-builder": "^24.13.3",
-    "electron-updater": "^6.1.8",
     "png-to-ico": "^3.0.1",
     "sharp": "^0.34.5"
   },
