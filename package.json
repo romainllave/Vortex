@@ -4,11 +4,35 @@
   "description": "Vortex desktop app (Electron)",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "publish": "electron-builder --win --publish always"
   },
   "devDependencies": {
     "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-updater": "^6.1.8",
     "png-to-ico": "^3.0.1",
     "sharp": "^0.34.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/romainllave/Vortex.git"
+  },
+  "build": {
+    "appId": "com.vortex.desktop",
+    "productName": "Vortex",
+    "files": [
+      "**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github"
+      }
+    ],
+    "win": {
+      "icon": "icon.ico",
+      "target": "nsis"
+    }
   }
 }
