@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vortex - Noir Violet</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="position-cards.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="brand">
+            <img src="logo.svg" alt="Vortex Logo" class="logo">
+            <span class="title">Vortex</span>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-glider"></div>
+            <a href="#" class="nav-link active">Dashboard</a>
+            <a href="#" class="nav-link">Analyse</a>
+            <a href="#" class="nav-link">Trade</a>
+            <a href="#" class="nav-link">Reward</a>
+            <a href="#" class="nav-link">Investissement</a>
+        </nav>
+    </header>
+
+    <!-- Dashboard Container -->
+    <div id="dashboard-container" class="dashboard-active">
+        <div class="main-column">
+            <div class="glass-card chart-card">
+                <div class="card-header">
+                    <h3>Bitcoin Live</h3>
+                    <span class="live-indicator"><span class="dot"></span> Live</span>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="cryptoChart"></canvas>
+                </div>
+                <div class="price-display">
+                    <span id="btc-price">Loading...</span>
+                    <span class="currency">USDT</span>
+                </div>
+            </div>
+
+            <!-- Market History Card -->
+            <div class="glass-card mini-card">
+                <div class="card-header">
+                    <h3>Market history</h3>
+                </div>
+                <div class="market-list" id="market-list">
+                    <!-- Les items seront insérés ici par JS -->
+                    <div class="loading-market">Chargement...</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="glass-card top-right-square">
+        <div class="inner-quick-square">
+            <h4>Over view</h4>
+            <div class="overview-chart">
+                <canvas id="portfolioChart"></canvas>
+                <div class="overview-center">
+                    <span class="detail-value">100%</span>
+                    <span class="overview-label">Portfolio</span>
+                </div>
+            </div>
+            <div class="overview-legend is-hidden" id="overview-legend">
+                <span class="legend-dot"></span>
+                <span class="legend-text" id="overview-legend-text">BTC</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card small-square">
+        <div class="card-header">
+            <h3>Top Revenue</h3>
+            <span class="weekly-total" id="weekly-total">+2.4k $</span>
+        </div>
+        <div class="revenue-chart" id="revenue-chart">
+            <div class="bar-group">
+                <span class="bar-value" id="val-0" style="animation-delay: 1.0s">250$</span>
+                <div class="bar" id="bar-0" style="height: 50%; animation-delay: 1.0s"></div>
+                <span class="bar-day">Lun</span>
+            </div>
+            <div class="bar-group">
+                <span class="bar-value" id="val-1" style="animation-delay: 1.1s">420$</span>
+                <div class="bar" id="bar-1" style="height: 75%; animation-delay: 1.1s"></div>
+                <span class="bar-day">Mar</span>
+            </div>
+            <div class="bar-group">
+                <span class="bar-value" id="val-2" style="animation-delay: 1.2s">310$</span>
+                <div class="bar" id="bar-2" style="height: 60%; animation-delay: 1.2s"></div>
+                <span class="bar-day">Mer</span>
+            </div>
+            <div class="bar-group">
+                <span class="bar-value" id="val-3" style="animation-delay: 1.3s">580$</span>
+                <div class="bar" id="bar-3" style="height: 95%; animation-delay: 1.3s"></div>
+                <span class="bar-day">Jeu</span>
+            </div>
+            <div class="bar-group">
+                <span class="bar-value" id="val-4" style="animation-delay: 1.4s">390$</span>
+                <div class="bar" id="bar-4" style="height: 70%; animation-delay: 1.4s"></div>
+                <span class="bar-day">Ven</span>
+            </div>
+            <div class="bar-group">
+                <span class="bar-value" id="val-5" style="animation-delay: 1.5s">280$</span>
+                <div class="bar" id="bar-5" style="height: 55%; animation-delay: 1.5s"></div>
+                <span class="bar-day">Sam</span>
+            </div>
+            <div class="bar-group">
+                <span class="bar-value" id="val-6" style="animation-delay: 1.6s">460$</span>
+                <div class="bar" id="bar-6" style="height: 80%; animation-delay: 1.6s"></div>
+                <span class="bar-day">Dim</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const navMenu = document.querySelector('.nav-menu');
+        const glider = document.querySelector('.nav-glider');
+        const links = document.querySelectorAll('.nav-link');
+
+        function moveGlider(element) {
+            // Use offset properties which are relative to the parent (nav-menu)
+            glider.style.width = element.offsetWidth + 'px';
+            glider.style.left = element.offsetLeft + 'px';
+
+            // Add motion blur effect
+            glider.classList.add('moving');
+
+            // Remove effect after transition finishes (300ms matches CSS)
+            // Clear any existing timeout to avoid flickers if moving fast
+            if (glider.movingTimeout) clearTimeout(glider.movingTimeout);
+
+            glider.movingTimeout = setTimeout(() => {
+                glider.classList.remove('moving');
+            }, 300);
+        }
+
+        // Initialize on the active link with robust waiting
+        function initGlider() {
+            const activeLink = document.querySelector('.nav-link.active');
+            if (activeLink) {
+                moveGlider(activeLink);
+            }
+        }
+
+        // Wait for everything to be ready (including fonts)
+        window.addEventListener('load', () => {
+            initGlider();
+            // Double check after a short delay to ensure animations didn't affect layout
+            setTimeout(initGlider, 100);
+        });
+
+        // Also wait for fonts specifically
+        document.fonts.ready.then(initGlider);
+
+        // Update on window resize
+        window.addEventListener('resize', initGlider);
+
+        links.forEach(link => {
+            link.addEventListener('mouseenter', () => {
+                moveGlider(link);
+            });
+
+            link.addEventListener('click', (e) => {
+                e.preventDefault(); // Stop default link jump for this demo
+
+                // Remove active class from all links
+                links.forEach(l => l.classList.remove('active'));
+
+                // Add active class to clicked link
+                link.classList.add('active');
+            });
+        });
+
+
+
+        // --- Crypto Chart Implementation ---
+        const ctx = document.getElementById('cryptoChart').getContext('2d');
+        const priceDisplay = document.getElementById('btc-price');
+
+        // Gradient for the line
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.5)'); // Purple
+        gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Time labels
+                datasets: [{
+                    label: 'BTC/USDT',
+                    data: [],
+                    borderColor: '#a78bfa',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointRadius: 0, // Hide points for clean look
+                    pointHoverRadius: 4,
+                    fill: true,
+                    tension: 0.4 // Smooth curve
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(20, 10, 40, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#a78bfa',
+                        borderColor: 'rgba(139, 92, 246, 0.2)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false // Hide x axis
+                    },
+                    y: {
+                        display: false, // Hide y axis
+                        grace: '5%' // Add some breathing room
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                animation: {
+                    x: {
+                        type: 'number',
+                        easing: 'easeOutQuart', // Smooth deceleration
+                        duration: 1200, // Each point takes 1.2s to draw
+                        from: NaN,
+                        // Progressive delay creates the left-to-right draw effect
+                        delay(ctx) {
+                            if (ctx.type !== 'data' || ctx.mode !== 'default') {
+                                return 0;
+                            }
+                            // 15ms per point * 60 points = 900ms total spread
+                            // Combined with 1200ms duration = ~2.1s total animation
+                            return ctx.dataIndex * 15;
+                        }
+                    },
+                    y: {
+                        // Disable vertical animation to emphasize the horizontal "drawing"
+                        duration: 0
+                    }
+                }
+            }
+        });
+
+        // stored data
+        // 60 points = 1 hour. 300 points = 5 hours.
+        const maxDataPoints = 60;
+
+        // Track the last minute we have data for
+        let lastMinuteLabel = null;
+
+        // Fetch Historical Data (Pre-fill chart with 1m candles)
+        async function fetchHistory() {
+            try {
+                // Change to 1m interval
+                const response = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=60');
+                const data = await response.json();
+
+                data.forEach(candle => {
+                    const date = new Date(candle[0]);
+                    const timeLabel = date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
+                    const closePrice = parseFloat(candle[4]).toFixed(2);
+
+                    chart.data.labels.push(timeLabel);
+                    chart.data.datasets[0].data.push(closePrice);
+                    lastMinuteLabel = timeLabel;
+                });
+
+                chart.update();
+
+                if (data.length > 0) {
+                    const lastPrice = parseFloat(data[data.length - 1][4]).toFixed(2);
+                    priceDisplay.innerText = parseFloat(lastPrice).toLocaleString('en-US');
+                }
+
+            } catch (err) {
+                console.error("Failed to load history:", err);
+            }
+        }
+
+        fetchHistory().then(() => {
+            const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const price = parseFloat(data.p).toFixed(2);
+
+                // 1. Text is ALWAYS instant
+                priceDisplay.innerText = parseFloat(price).toLocaleString('en-US');
+
+                // 2. Chart updates every minute
+                const date = new Date(data.T);
+                const timeLabel = date.getHours() + ':' + date.getMinutes().toString().padStart(2, '0');
+
+                if (timeLabel !== lastMinuteLabel) {
+                    // New minute has started -> Add new point
+                    if (chart.data.labels.length > maxDataPoints) {
+                        chart.data.labels.shift();
+                        chart.data.datasets[0].data.shift();
+                    }
+                    chart.data.labels.push(timeLabel);
+                    chart.data.datasets[0].data.push(price);
+                    chart.update('none');
+
+                    lastMinuteLabel = timeLabel;
+                } else {
+                    // Same minute -> Update the LAST point to be "live" (optional but better)
+                    // If you strictly want 1 tick = 1 minute fixed, remove this else block.
+                    // But showing the live candle forming is usually preferred.
+                    // Given request "tick de 1sec a 1minute", I'll make it LIVE move but record per minute.
+                    chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1] = price;
+                    chart.update('none');
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket Error:', error);
+                priceDisplay.innerText = "Error";
+                priceDisplay.style.color = "red";
+            };
+        });
+
+        // --- Market History Enhancement ---
+        function renderMarketItems(items) {
+            const marketList = document.getElementById('market-list');
+            if (!marketList) return;
+
+            marketList.innerHTML = '';
+
+            items.forEach((crypto, index) => {
+                const symbol = crypto.symbol.replace('USDT', '');
+                const fullName = crypto.fullName || symbol;
+                const lastPrice = parseFloat(crypto.lastPrice);
+
+                let priceText;
+                if (lastPrice < 1) {
+                    priceText = lastPrice.toFixed(4);
+                } else if (lastPrice < 10) {
+                    priceText = lastPrice.toFixed(3);
+                } else {
+                    priceText = lastPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+
+                const change = parseFloat(crypto.priceChangePercent).toFixed(2);
+                const isPositive = parseFloat(change) >= 0;
+
+                const logoUrl = `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.toLowerCase()}.png`;
+
+                const item = document.createElement('div');
+                item.className = 'market-item';
+                item.style.animationDelay = `${index * 0.1}s`;
+                item.innerHTML = `
+                    <div class="market-item-left">
+                        <span class="market-rank">#${index + 1}</span>
+                        <div class="market-logo-container">
+                            <img src="${logoUrl}" alt="${symbol}" class="market-logo" onerror="this.src='https://ui-avatars.com/api/?name=${symbol}&background=160d2e&color=a78bfa&bold=true'">
+                        </div>
+                        <span class="market-symbol">${fullName}</span>
+                    </div>
+                    <div class="market-item-right">
+                        <span class="market-price">${priceText} $</span>
+                        <span class="market-change ${isPositive ? 'positive' : 'negative'}">
+                            ${isPositive ? '+' : ''}${change}%
+                        </span>
+                    </div>
+                `;
+                marketList.appendChild(item);
+            });
+        }
+
+        function renderMarketFallback() {
+            const fallback = [
+                { symbol: 'BTCUSDT', fullName: 'Bitcoin', lastPrice: '62000', priceChangePercent: '1.2' },
+                { symbol: 'ETHUSDT', fullName: 'Ethereum', lastPrice: '3200', priceChangePercent: '-0.6' },
+                { symbol: 'SOLUSDT', fullName: 'Solana', lastPrice: '140', priceChangePercent: '2.3' },
+                { symbol: 'BNBUSDT', fullName: 'Binance Coin', lastPrice: '580', priceChangePercent: '0.8' },
+                { symbol: 'XRPUSDT', fullName: 'Ripple', lastPrice: '0.62', priceChangePercent: '-1.1' },
+                { symbol: 'ADAUSDT', fullName: 'Cardano', lastPrice: '0.46', priceChangePercent: '0.4' },
+                { symbol: 'DOGEUSDT', fullName: 'Dogecoin', lastPrice: '0.12', priceChangePercent: '1.7' },
+                { symbol: 'TRXUSDT', fullName: 'TRON', lastPrice: '0.11', priceChangePercent: '0.3' }
+            ];
+
+            renderMarketItems(fallback);
+        }
+
+        async function fetchMarketHistory() {
+            const marketList = document.getElementById('market-list');
+            if (!marketList) return;
+            marketList.innerHTML = '<div class="loading-market">Chargement...</div>';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr', { signal: controller.signal });
+                const data = await response.json();
+
+                // On filtre pour ne garder que les paires USDT majeures et exclure les stablecoins si possible
+                const filtered = data.filter(ticker =>
+                    ticker.symbol.endsWith('USDT') &&
+                    !ticker.symbol.includes('UP') &&
+                    !ticker.symbol.includes('DOWN') &&
+                    !['USDCUSDT', 'BUSDUSDT', 'FDUSDUSDT', 'TUSDUSDT'].includes(ticker.symbol)
+                );
+
+                // Dictionnaire des noms complets
+                const cryptoNames = {
+                    'BTC': 'Bitcoin',
+                    'ETH': 'Ethereum',
+                    'SOL': 'Solana',
+                    'BNB': 'Binance Coin',
+                    'XRP': 'Ripple',
+                    'ADA': 'Cardano',
+                    'DOGE': 'Dogecoin',
+                    'TRX': 'TRON',
+                    'DOT': 'Polkadot',
+                    'LINK': 'Chainlink',
+                    'AVAX': 'Avalanche',
+                    'MATIC': 'Polygon',
+                    'LTC': 'Litecoin',
+                    'BCH': 'Bitcoin Cash',
+                    'SHIB': 'Shiba Inu',
+                    'NEAR': 'NEAR Protocol',
+                    'UNI': 'Uniswap',
+                    'ICP': 'Internet Computer',
+                    'APT': 'Aptos',
+                    'ETC': 'Ethereum Classic',
+                    'STX': 'Stacks',
+                    'FIL': 'Filecoin',
+                    'ATOM': 'Cosmos',
+                    'IMX': 'Immutable',
+                    'LDO': 'Lido DAO',
+                    'OP': 'Optimism',
+                    'TIA': 'Celestia',
+                    'ARB': 'Arbitrum',
+                    'KAS': 'Kaspa',
+                    'PEPE': 'Pepe Coin',
+                    'RENDER': 'Render Network',
+                    'TAO': 'Bittensor',
+                    'HBAR': 'Hedera',
+                    'SUI': 'Sui',
+                    'ID': 'Space ID',
+                    'ZEC': 'Zcash'
+                };
+
+                // Tri par volume de transactions descendant (pour afficher les "vraies" cryptos majeures)
+                const topByVolume = filtered
+                    .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+                    .slice(0, 8);
+
+                marketList.innerHTML = '';
+
+                topByVolume.forEach((crypto, index) => {
+                    const symbol = crypto.symbol.replace('USDT', '');
+                    const fullName = cryptoNames[symbol] || symbol;
+                    const lastPrice = parseFloat(crypto.lastPrice);
+
+                    // Formatage du prix : plus de précision pour les petits prix
+                    let priceText;
+                    if (lastPrice < 1) {
+                        priceText = lastPrice.toFixed(4);
+                    } else if (lastPrice < 10) {
+                        priceText = lastPrice.toFixed(3);
+                    } else {
+                        priceText = lastPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
+
+                    const change = parseFloat(crypto.priceChangePercent).toFixed(2);
+                    const isPositive = parseFloat(change) >= 0;
+
+                    // Source de logo fiable (crypto-icons)
+                    const logoUrl = `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${symbol.toLowerCase()}.png`;
+
+                    const item = document.createElement('div');
+                    item.className = 'market-item';
+                    item.style.animationDelay = `${index * 0.1}s`; // Effet de cascade
+                    item.innerHTML = `
+                        <div class="market-item-left">
+                            <span class="market-rank">#${index + 1}</span>
+                            <div class="market-logo-container">
+                                <img src="${logoUrl}" alt="${symbol}" class="market-logo" onerror="this.src='https://ui-avatars.com/api/?name=${symbol}&background=160d2e&color=a78bfa&bold=true'">
+                            </div>
+                            <span class="market-symbol">${fullName}</span>
+                        </div>
+                        <div class="market-item-right">
+                            <span class="market-price">${priceText} $</span>
+                            <span class="market-change ${isPositive ? 'positive' : 'negative'}">
+                                ${isPositive ? '+' : ''}${change}%
+                            </span>
+                        </div>
+                    `;
+                    marketList.appendChild(item);
+                });
+
+                clearTimeout(timeoutId);
+            } catch (err) {
+                console.error("Failed to fetch market history:", err);
+                renderMarketFallback();
+                clearTimeout(timeoutId);
+            }
+        }
+
+        // --- Dynamic Revenue Logic ---
+        let revenueData = [250, 420, 310, 580, 390, 280, 460]; // Lun to Dim
+
+        window.updateRevenueUI = function () {
+            const total = revenueData.reduce((a, b) => a + b, 0);
+            const totalEl = document.getElementById('weekly-total');
+            if (totalEl) totalEl.innerText = (total / 1000).toFixed(1) + 'k $';
+
+            const maxGain = Math.max(...revenueData, 600);
+
+            revenueData.forEach((gain, index) => {
+                const bar = document.getElementById(`bar-${index}`);
+                const val = document.getElementById(`val-${index}`);
+                if (bar && val) {
+                    const heightPercent = Math.max(10, (gain / maxGain) * 95);
+                    bar.style.height = heightPercent + '%';
+                    val.innerText = gain + '$';
+                }
+            });
+        }
+
+        window.addTrade = function (amount) {
+            let day = new Date().getDay();
+            let index = day === 0 ? 6 : day - 1;
+
+            revenueData[index] += amount;
+            window.updateRevenueUI();
+
+            const bar = document.getElementById(`bar-${index}`);
+            if (bar) {
+                bar.style.animation = 'none';
+                bar.offsetHeight;
+                bar.style.animation = null;
+            }
+        }
+
+        // Initialiser le camembert du portefeuille
+        const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
+        const portfolioChart = new Chart(portfolioCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Available', 'In Position'],
+                datasets: [{
+                    data: [100, 0],
+                    backgroundColor: [
+                        'rgba(255, 255, 255, 0.1)',
+                        '#8B5CF6'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        enabled: false
+                    }
+                }
+            }
+        });
+
+        // Fonction pour mettre à jour le portefeuille (Simulation)
+        function updatePortfolio(usedPercentage) {
+            portfolioChart.data.datasets[0].data = [100 - usedPercentage, usedPercentage];
+            portfolioChart.update();
+            const valEl = document.querySelector('.detail-value');
+            if (valEl) {
+                valEl.innerText = usedPercentage + '%';
+                if (usedPercentage > 0) {
+                    valEl.style.color = '#8B5CF6';
+                } else {
+                    valEl.style.color = 'rgba(255, 255, 255, 0.7)';
+                }
+            }
+
+            const legendEl = document.getElementById('overview-legend');
+            const legendTextEl = document.getElementById('overview-legend-text');
+            if (legendEl && legendTextEl) {
+                if (usedPercentage === 0) {
+                    legendEl.classList.add('is-hidden');
+                } else {
+                    legendTextEl.innerText = 'BTC';
+                    legendEl.classList.remove('is-hidden');
+                }
+            }
+
+            // Update Asset List
+            const listEl = document.querySelector('.asset-list');
+            if (listEl) {
+                // Pourcentages
+                const btcPercent = usedPercentage;
+                const availablePercent = 100 - usedPercentage;
+
+                listEl.innerHTML = `
+                    <div class="asset-item">
+                        <span class="asset-dot" style="background: #8B5CF6;"></span>
+                        <span class="asset-name">BTC</span>
+                    </div>
+                    <div class="asset-item">
+                        <span class="asset-dot" style="background: rgba(255, 255, 255, 0.5);"></span>
+                        <span class="asset-name">Free</span>
+                    </div>
+                `;
+            }
+
+            // Render Position Cards dynamically
+            renderPositionCards(usedPercentage);
+        }
+
+        // Function to render position cards based on active positions
+        function renderPositionCards(usedPercentage) {
+            const container = document.getElementById('positions-container');
+            if (!container) return;
+
+            // Clear existing cards
+            container.innerHTML = '';
+
+            // Only show cards if we have positions (usedPercentage > 0)
+            if (usedPercentage === 0) {
+                return; // No positions, container stays empty
+            }
+
+            // Mock positions data - replace with real data later
+            const positions = [
+                {
+                    symbol: 'BTC',
+                    icon: '₿',
+                    amount: 0.0025,
+                    value: 250,
+                    pnl: 12.5,
+                    pnlPercent: 5.2
+                },
+                {
+                    symbol: 'ETH',
+                    icon: 'Ξ',
+                    amount: 0.15,
+                    value: 180,
+                    pnl: -8.3,
+                    pnlPercent: -4.4
+                },
+                {
+                    symbol: 'SOL',
+                    icon: 'S',
+                    amount: 2.5,
+                    value: 95,
+                    pnl: 5.2,
+                    pnlPercent: 5.8
+                },
+                {
+                    symbol: 'ADA',
+                    icon: '₳',
+                    amount: 150,
+                    value: 75,
+                    pnl: 3.1,
+                    pnlPercent: 4.3
+                },
+                {
+                    symbol: 'DOT',
+                    icon: '●',
+                    amount: 12,
+                    value: 60,
+                    pnl: -2.5,
+                    pnlPercent: -4.0
+                },
+                {
+                    symbol: 'LINK',
+                    icon: '⬡',
+                    amount: 8,
+                    value: 45,
+                    pnl: 1.8,
+                    pnlPercent: 4.2
+                }
+            ];
+
+            // Render each position card
+            positions.forEach(pos => {
+                const card = document.createElement('div');
+                card.className = 'position-card';
+                const pnlClass = pos.pnl >= 0 ? 'positive' : 'negative';
+                const pnlSign = pos.pnl >= 0 ? '+' : '';
+
+                card.innerHTML = `
+                    <div class="position-header">
+                        <div class="position-icon">${pos.icon}</div>
+                        <span class="position-symbol">${pos.symbol}</span>
+                    </div>
+                    <div class="position-amount">${pos.amount} ${pos.symbol}</div>
+                    <div class="position-value">$${pos.value.toFixed(2)}</div>
+                    <div class="position-pnl ${pnlClass}">
+                        ${pnlSign}${pos.pnl.toFixed(2)} (${pnlSign}${pos.pnlPercent.toFixed(1)}%)
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        updatePortfolio(0);
+
+        // Initial fetch and refresh every 30 seconds
+        fetchMarketHistory();
+        setInterval(fetchMarketHistory, 30000);
+        window.updateRevenueUI();
+    </script>
+</body>
+
+</html>
+
+

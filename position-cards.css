@@ -1,0 +1,81 @@
+/* Positions Container - appears on right side */
+.positions-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 10px !important;
+    height: 195px !important;
+    width: 100% !important;
+    align-content: stretch;
+}
+
+/* Individual Position Card */
+.position-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    padding: 8px 10px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px !important;
+    min-width: 0 !important;
+    height: 86px !important;
+    min-height: 86px !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease;
+}
+
+.position-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(139, 92, 246, 0.5);
+    transform: translateY(-2px);
+}
+
+.position-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.position-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(139, 92, 246, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.position-symbol {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.position-amount {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.position-value {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #8B5CF6;
+}
+
+.position-pnl {
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+.position-pnl.positive {
+    color: #10b981;
+}
+
+.position-pnl.negative {
+    color: #ef4444;
+}
