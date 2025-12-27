@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vortex - Login</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="login-screen is-standalone" id="login-screen">
+      <div class="login-card">
+        <div class="login-brand">
+          <img src="logo.svg" alt="Vortex Logo" class="logo">
+          <span class="title">Vortex</span>
+        </div>
+        <h1>Connexion</h1>
+        <p>Connecte-toi pour continuer.</p>
+        <form id="login-form" class="login-form" novalidate>
+          <label class="login-label" for="login-user">Email or username</label>
+          <input id="login-user" class="login-input" type="text" autocomplete="username" placeholder="email@example.com">
+          <label class="login-label" for="login-pass">Password</label>
+          <input id="login-pass" class="login-input" type="password" autocomplete="current-password" placeholder="********">
+          <div class="login-row">
+            <label class="remember">
+              <input type="checkbox" checked>
+              Remember me
+            </label>
+            <button class="login-link" type="button">Forgot?</button>
+          </div>
+          <div class="login-error" id="login-error"></div>
+          <button class="login-btn" type="submit">Enter</button>
+        </form>
+        <div class="login-footer">Secure access - Vortex Desktop</div>
+      </div>
+    </div>
+
+    <script>
+      const loginForm = document.getElementById('login-form');
+      const loginUser = document.getElementById('login-user');
+      const loginPass = document.getElementById('login-pass');
+      const loginError = document.getElementById('login-error');
+
+      loginForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const userVal = loginUser.value.trim();
+        const passVal = loginPass.value.trim();
+
+        if (!userVal || !passVal) {
+          loginForm.classList.add('has-error');
+          loginError.textContent = 'Please enter a user and password.';
+          return;
+        }
+
+        loginForm.classList.remove('has-error');
+        loginError.textContent = '';
+        if (window.vortexLogin && typeof window.vortexLogin.submit === 'function') {
+          window.vortexLogin.submit();
+        }
+      });
+    </script>
+  </body>
+</html>
