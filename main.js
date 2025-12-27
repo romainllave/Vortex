@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
@@ -8,6 +9,17 @@ let updateWindowReady = false;
 let pendingUpdateStatus = 'Verification des mises a jour...';
 let windowReady = false;
 let updateCheckComplete = false;
+
+function logUpdate(message) {
+  const line = `[${new Date().toISOString()}] ${message}\n`;
+  try {
+    const logPath = path.join(app.getPath('userData'), 'updater.log');
+    fs.appendFileSync(logPath, line);
+  } catch (err) {
+    console.warn('Failed to write updater log:', err);
+  }
+  console.log(message);
+}
 
 function maybeShowMainWindow() {
   if (!mainWindow || mainWindow.isDestroyed()) {
@@ -96,6 +108,20 @@ function setUpdateStatus(message) {
   );
 }
 
+function setUpdateProgress(percent) {
+  if (!updateWindow || updateWindow.isDestroyed() || !updateWindowReady) {
+    return;
+  }
+
+  const safePercent = Math.max(0, Math.min(100, Math.round(percent)));
+  updateWindow.webContents.executeJavaScript(
+    `document.getElementById('progress-fill').style.width = '${safePercent}%';`
+  );
+  updateWindow.webContents.executeJavaScript(
+    `document.getElementById('progress-text').textContent = '${safePercent}%';`
+  );
+}
+
 function setupAutoUpdates() {
   autoUpdater.autoDownload = true;
 
@@ -105,29 +131,39 @@ function setupAutoUpdates() {
   };
 
   autoUpdater.on('error', (err) => {
-    console.error('Auto-update error:', err);
+    logUpdate(`Auto-update error: ${err}`);
     setUpdateStatus('Erreur de mise a jour. Demarrage en cours...');
     markUpdateCheckComplete();
   });
 
   autoUpdater.on('update-available', () => {
-    console.log('Update available. Downloading...');
+    logUpdate('Update available. Downloading...');
     setUpdateStatus('Mise a jour disponible. Telechargement...');
   });
 
   autoUpdater.on('update-not-available', () => {
-    console.log('No updates available.');
+    logUpdate('No updates available.');
     setUpdateStatus('Aucune mise a jour disponible.');
+    setUpdateProgress(100);
     markUpdateCheckComplete();
   });
 
+  autoUpdater.on('download-progress', (progress) => {
+    const percent = progress.percent || 0;
+    setUpdateProgress(percent);
+    logUpdate(
+      `Download progress: ${percent.toFixed(1)}% (${progress.transferred}/${progress.total})`
+    );
+  });
+
   autoUpdater.on('update-downloaded', () => {
-    console.log('Update downloaded. Restarting to apply it.');
+    logUpdate('Update downloaded. Restarting to apply it.');
+    setUpdateProgress(100);
     autoUpdater.quitAndInstall();
   });
 
   autoUpdater.checkForUpdates().catch((err) => {
-    console.error('Auto-update check failed:', err);
+    logUpdate(`Auto-update check failed: ${err}`);
     markUpdateCheckComplete();
   });
 }

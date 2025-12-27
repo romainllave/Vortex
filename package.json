@@ -1,6 +1,6 @@
 {
   "name": "vortex-desktop",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Vortex desktop app (Electron)",
   "main": "main.js",
   "scripts": {

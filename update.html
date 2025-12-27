@@ -58,27 +58,28 @@
         color: rgba(244, 243, 251, 0.75);
       }
 
-      .loader {
-        width: 120px;
-        height: 3px;
+      .progress {
+        width: 200px;
+        height: 6px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.12);
         overflow: hidden;
         position: relative;
       }
 
-      .loader::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        width: 40%;
-        background: linear-gradient(90deg, transparent, #a78bfa, transparent);
-        animation: slide 1.2s ease-in-out infinite;
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #a78bfa, #6d28d9);
+        box-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
+        transition: width 0.25s ease;
       }
 
-      @keyframes slide {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(250%); }
+      .progress-text {
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        color: rgba(244, 243, 251, 0.65);
       }
     </style>
   </head>
@@ -86,7 +87,10 @@
     <div class="card">
       <img class="logo" src="logo.svg" alt="Vortex">
       <div class="title">Vortex</div>
-      <div class="loader" aria-hidden="true"></div>
+      <div class="progress" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-text" id="progress-text">0%</div>
       <div class="status" id="status">Verification des mises a jour...</div>
     </div>
   </body>
