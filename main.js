@@ -1,38 +1,23 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
 let updateWindow;
-let loginWindow;
 let updateWindowReady = false;
 let pendingUpdateStatus = 'Verification des mises a jour...';
 let windowReady = false;
 let updateCheckComplete = false;
-let loginComplete = false;
 
 function maybeShowMainWindow() {
   if (!mainWindow || mainWindow.isDestroyed()) {
     return;
   }
 
-  if (windowReady && updateCheckComplete && loginComplete) {
+  if (windowReady && updateCheckComplete) {
     closeUpdateWindow();
     mainWindow.show();
   }
-}
-
-function maybeShowLoginWindow() {
-  if (loginComplete || !updateCheckComplete) {
-    return;
-  }
-
-  if (!loginWindow || loginWindow.isDestroyed()) {
-    createLoginWindow();
-  }
-
-  loginWindow.show();
-  loginWindow.focus();
 }
 
 function createWindow() {
@@ -53,35 +38,6 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     windowReady = true;
     maybeShowMainWindow();
-  });
-}
-
-function createLoginWindow() {
-  if (loginWindow && !loginWindow.isDestroyed()) {
-    return;
-  }
-
-  loginWindow = new BrowserWindow({
-    width: 520,
-    height: 640,
-    resizable: false,
-    show: false,
-    backgroundColor: '#000000',
-    autoHideMenuBar: true,
-    icon: path.join(__dirname, 'icon.ico'),
-    webPreferences: {
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload-login.js')
-    }
-  });
-
-  loginWindow.loadFile(path.join(__dirname, 'login.html'));
-
-  loginWindow.on('closed', () => {
-    loginWindow = null;
-    if (!loginComplete) {
-      app.quit();
-    }
   });
 }
 
@@ -146,7 +102,6 @@ function setupAutoUpdates() {
   const markUpdateCheckComplete = () => {
     updateCheckComplete = true;
     maybeShowMainWindow();
-    maybeShowLoginWindow();
   };
 
   autoUpdater.on('error', (err) => {
@@ -185,7 +140,7 @@ app.whenReady().then(() => {
     setupAutoUpdates();
   } else {
     updateCheckComplete = true;
-    maybeShowLoginWindow();
+    maybeShowMainWindow();
   }
 
   app.on('activate', () => {
@@ -193,14 +148,6 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
-});
-
-ipcMain.on('login-success', () => {
-  loginComplete = true;
-  if (loginWindow && !loginWindow.isDestroyed()) {
-    loginWindow.close();
-  }
-  maybeShowMainWindow();
 });
 
 app.on('window-all-closed', () => {

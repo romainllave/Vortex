@@ -10,7 +10,34 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
+<body class="is-locked">
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="login-brand">
+                <img src="logo.svg" alt="Vortex Logo" class="logo">
+                <span class="title">Vortex</span>
+            </div>
+            <h1>Connexion</h1>
+            <p>Connecte-toi pour continuer.</p>
+            <form id="login-form" class="login-form" novalidate>
+                <label class="login-label" for="login-user">Email or username</label>
+                <input id="login-user" class="login-input" type="text" autocomplete="username" placeholder="email@example.com">
+                <label class="login-label" for="login-pass">Password</label>
+                <input id="login-pass" class="login-input" type="password" autocomplete="current-password" placeholder="********">
+                <div class="login-row">
+                    <label class="remember">
+                        <input type="checkbox" checked>
+                        Remember me
+                    </label>
+                    <button class="login-link" type="button">Forgot?</button>
+                </div>
+                <div class="login-error" id="login-error"></div>
+                <button class="login-btn" type="submit">Enter</button>
+            </form>
+            <div class="login-footer">Secure access - Vortex Desktop</div>
+        </div>
+    </div>
+
     <div id="app-shell" class="app-shell">
     <header class="navbar">
         <div class="brand">
@@ -122,6 +149,34 @@
 
     <script>
 
+
+        const bodyEl = document.body;
+        const loginScreen = document.getElementById('login-screen');
+        const loginForm = document.getElementById('login-form');
+        const loginUser = document.getElementById('login-user');
+        const loginPass = document.getElementById('login-pass');
+        const loginError = document.getElementById('login-error');
+
+        function unlockApp() {
+            bodyEl.classList.remove('is-locked');
+            loginScreen.classList.add('is-hidden');
+        }
+
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const userVal = loginUser.value.trim();
+            const passVal = loginPass.value.trim();
+
+            if (!userVal || !passVal) {
+                loginForm.classList.add('has-error');
+                loginError.textContent = 'Please enter a user and password.';
+                return;
+            }
+
+            loginForm.classList.remove('has-error');
+            loginError.textContent = '';
+            unlockApp();
+        });
 
         const navMenu = document.querySelector('.nav-menu');
         const glider = document.querySelector('.nav-glider');
